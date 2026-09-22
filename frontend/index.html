@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain-Adaptive Speech Emotion Recognition using CORAL</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Top Navigation / Header -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5v14M7 5v14M2 9v6M22 9v6"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>Domain-Adaptive Speech Emotion Recognition</h1>
+                        <p class="subtitle">Detect speech emotion and adapt predictions to a new recording domain using CORAL.</p>
+                    </div>
+                </div>
+                <div class="api-status-badge" id="apiStatusBadge">
+                    <span class="status-dot"></span>
+                    <span class="status-text" id="apiStatusText">Checking Backend...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-container">
+            <!-- Left Column: Audio Input & Benchmark -->
+            <section class="column left-col">
+                <!-- Audio Input Card -->
+                <div class="card glass-card upload-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="step-num">1</span>
+                            <h2>Audio Input</h2>
+                        </div>
+                        <span class="format-tag">WAV AUDIO</span>
+                    </div>
+
+                    <!-- Input Mode Tabs -->
+                    <div class="input-mode-tabs">
+                        <button type="button" class="tab-btn active" id="tabUpload">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Upload WAV File
+                        </button>
+                        <button type="button" class="tab-btn" id="tabRecord">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                            🎤 Record Voice
+                        </button>
+                    </div>
+
+                    <!-- Panel 1: File Upload Dropzone -->
+                    <div class="input-panel" id="panelUpload">
+                        <div class="dropzone" id="dropzone">
+                            <input type="file" id="audioFileInput" accept=".wav,audio/wav" class="file-input">
+                            <div class="dropzone-content" id="dropzoneContent">
+                                <div class="upload-icon-wrapper">
+                                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </div>
+                                <p class="dropzone-title">Drop your WAV audio file here</p>
+                                <p class="dropzone-sub">or <span class="browse-link">browse from your computer</span></p>
+                                <p class="dropzone-hint">Supports 16kHz mono/stereo WAV speech recordings</p>
+                            </div>
+
+                            <!-- Selected Uploaded File Preview -->
+                            <div class="file-info-box hidden" id="fileInfoBox">
+                                <div class="file-meta">
+                                    <div class="file-icon">🎵</div>
+                                    <div class="file-details">
+                                        <div class="file-name" id="selectedFileName">sample.wav</div>
+                                        <div class="file-size" id="selectedFileSize">0 KB</div>
+                                    </div>
+                                    <button type="button" class="btn-clear" id="btnClearFile" title="Remove file">✕</button>
+                                </div>
+                                <audio id="audioPreview" controls class="audio-player"></audio>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 2: Microphone Recorder -->
+                    <div class="input-panel hidden" id="panelRecord">
+                        <div class="recorder-box" id="recorderBox">
+                            <!-- Standby State -->
+                            <div class="record-standby" id="recordStandby">
+                                <button type="button" class="btn-record-main" id="btnStartRecord">
+                                    <div class="record-pulse-ring"></div>
+                                    <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+                                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                                    </svg>
+                                </button>
+                                <p class="record-prompt">Click to Record Voice</p>
+                                <p class="record-hint">Maximum recording duration: 10 seconds</p>
+                            </div>
+
+                            <!-- Active Recording State -->
+                            <div class="record-active hidden" id="recordActive">
+                                <div class="record-indicator-row">
+                                    <span class="live-dot"></span>
+                                    <span class="live-label">RECORDING LIVE</span>
+                                    <span class="record-timer" id="recordTimer">00:00 / 00:10</span>
+                                </div>
+                                <div class="live-waveform">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                                <button type="button" class="btn-stop-record" id="btnStopRecord">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <rect x="6" y="6" width="12" height="12" rx="2"/>
+                                    </svg>
+                                    Stop Recording
+                                </button>
+                            </div>
+
+                            <!-- Recording Completed Preview -->
+                            <div class="record-preview hidden" id="recordPreview">
+                                <div class="file-meta">
+                                    <div class="file-icon">🎙️</div>
+                                    <div class="file-details">
+                                        <div class="file-name" id="recordedFileName">recorded_voice.wav</div>
+                                        <div class="file-size" id="recordedFileSize">16 kHz PCM WAV</div>
+                                    </div>
+                                    <button type="button" class="btn-clear" id="btnRerecord" title="Record again">🔄</button>
+                                </div>
+                                <audio id="recordedAudioPreview" controls class="audio-player"></audio>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings & Action -->
+                    <div class="controls-group">
+                        <div class="toggle-wrapper">
+                            <label class="switch">
+                                <input type="checkbox" id="coralToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <div class="toggle-labels">
+                                <span class="toggle-title">Apply CORAL Domain Adaptation</span>
+                                <span class="toggle-sub">Aligns target covariance to source feature space</span>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-primary" id="btnAnalyze" disabled>
+                            <span class="btn-text">Analyze Emotion</span>
+                            <span class="btn-spinner hidden" id="btnSpinner"></span>
+                        </button>
+                    </div>
+
+                    <!-- Error Alert Box -->
+                    <div class="alert-box error hidden" id="errorAlert">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-message" id="errorMessage">An error occurred.</div>
+                    </div>
+                </div>
+
+                <!-- Experiment Benchmark Card -->
+                <div class="card glass-card benchmark-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <span class="badge-icon">📊</span>
+                            <h2>Research & Evaluation Benchmark</h2>
+                        </div>
+                        <span class="benchmark-label">Offline Experiment</span>
+                    </div>
+                    <p class="benchmark-desc">
+                        Baseline classifier trained on <strong>RAVDESS (Source)</strong> and evaluated cross-dataset on <strong>CREMA-D (Target)</strong>.
+                    </p>
+
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-name">RAVDESS (Within-Domain)</span>
+                            <div class="metric-value source-acc">95.27%</div>
+                            <span class="metric-sub">Source Test Accuracy</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-name">CREMA-D (Before CORAL)</span>
+                            <div class="metric-value before-acc">20.00%</div>
+                            <span class="metric-sub">Raw Cross-Domain</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-name">CREMA-D (After CORAL)</span>
+                            <div class="metric-value after-acc">21.50%</div>
+                            <span class="metric-sub">Domain-Aligned Test</span>
+                        </div>
+                        <div class="metric-item highlight-item">
+                            <span class="metric-name">Accuracy Improvement</span>
+                            <div class="metric-value delta-acc">+1.50%</div>
+                            <span class="metric-sub">Covariance Shift Recovery</span>
+                        </div>
+                    </div>
+                    <div class="benchmark-footer">
+                        <small>💡 Note: These metrics represent aggregate offline dataset test results, not the individual accuracy of an uploaded or recorded voice sample.</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Live Analysis Output -->
+            <section class="column right-col">
+                <div class="card glass-card results-card" id="resultsCard">
+                    <!-- Initial Placeholder State -->
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon-pulse">
+                            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M8 12a4 4 0 0 0 8 0"/>
+                                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                            </svg>
+                        </div>
+                        <h3>Ready for Inference</h3>
+                        <p>Upload a speech WAV recording or record your voice on the left, then click <strong>Analyze Emotion</strong> to see real-time classification and emotion probability distribution.</p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="loading-state hidden" id="loadingState">
+                        <div class="pulsing-wave">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <h3>Extracting 80-dim MFCCs & Aligning Covariance...</h3>
+                        <p>Running Random Forest inference via FastAPI</p>
+                    </div>
+
+                    <!-- Active Result State -->
+                    <div class="result-content hidden" id="resultContent">
+                        <div class="prediction-header">
+                            <div class="prediction-badge-wrapper">
+                                <div class="emotion-emoji" id="resEmotionEmoji">🎭</div>
+                                <div>
+                                    <span class="res-meta-label">PREDICTED EMOTION</span>
+                                    <h2 class="res-emotion-title" id="resEmotionTitle">Happy</h2>
+                                </div>
+                            </div>
+                            <div class="confidence-pill">
+                                <span class="conf-label">Confidence</span>
+                                <span class="conf-value" id="resConfidence">0.0%</span>
+                            </div>
+                        </div>
+
+                        <div class="coral-status-banner" id="resCoralBanner">
+                            <span class="coral-badge" id="resCoralBadge">CORAL ADAPTATION APPLIED</span>
+                            <span class="coral-desc" id="resCoralDesc">Aligned target MFCC distribution using reference covariance matrix.</span>
+                        </div>
+
+                        <!-- Probability Distribution Bars -->
+                        <div class="distribution-section">
+                            <div class="distribution-header">
+                                <h3>Emotion Probability Distribution</h3>
+                                <span class="dist-note">6 Shared Emotion Classes</span>
+                            </div>
+
+                            <div class="probability-bars" id="probabilityBars">
+                                <!-- Generated dynamically via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Technical Summary Footer -->
+                        <div class="tech-summary">
+                            <div class="tech-chip">
+                                <span>Input:</span> <strong id="resFileName">file.wav</strong>
+                            </div>
+                            <div class="tech-chip">
+                                <span>Features:</span> <strong>80-dim MFCC (Mean+Std)</strong>
+                            </div>
+                            <div class="tech-chip">
+                                <span>Model:</span> <strong>Random Forest (200 trees)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
